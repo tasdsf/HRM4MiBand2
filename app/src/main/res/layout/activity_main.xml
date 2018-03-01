@@ -6,7 +6,7 @@
     android:background="@android:color/white"
     android:orientation="vertical"
     android:padding="10dp"
-    tools:context="id.aashari.code.miband2.Activities.MainActivity">
+    tools:context="com.id.hrm4miband2.Activities.MainActivity">
 
 
     <LinearLayout
