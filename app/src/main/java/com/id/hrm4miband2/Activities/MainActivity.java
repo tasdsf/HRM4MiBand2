@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
     private SeekBar setTimerHour;
     private int battlevel;
     private int bpm;
-    private int probCounter=0;
+    private int probCounter = 0;
 
  /*   private String KEY= "A1E-0ee54d1181c8a871188d4ddd4fdb2f2d3ef8";
     private String BATTERY_KEY= "5a15afe3c03f977cb0361e49";
@@ -196,7 +196,7 @@ public class MainActivity extends Activity {
                 });
                 boolean goodKeyAndVar = false;
                 try {
-                    Log.v("charRead", "check point! trying to  battery battlevel: " + battlevel + "%");
+                    Log.v("charRead", "check point! trying to  verify  battery battlevel: " + battlevel + "%");
                     String[] keyvarArray = new String[]{KEY, BATTERY_KEY, battlevel + ""};
                     goodKeyAndVar = new ApiUbidots_VerifyVarId().execute(keyvarArray).get();
                     Log.v("charRead", "var return: var good key n var? : " + goodKeyAndVar);
@@ -227,11 +227,30 @@ public class MainActivity extends Activity {
             miBandTimeOut.cancel();
             if (bpm >= MaxBpmAlarm) {
                 message = "The last heart rate value of " + bpm + " it's exceeding the " + MaxBpmAlarm + " bmp Maximum Value";
-                if (++probCounter>2) sendSMSMessage();
+                if (probCounter > 2) {
+                    sendSMSMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            startScanHeartRate();
+                        }
+                    });
+                    Log.v("charChanged", "value alarm: "+bpm+" counter:"+probCounter);
+
+                }
             }
             if (bpm <= MinBpmAlarm) {
-                message = "The last heart rate value of " + bpm + " it's under the " + MaxBpmAlarm + " bmp Maximum Value";
-                if (++probCounter>2) sendSMSMessage();
+                message = "The last heart rate value of " + bpm + " it's under the " + MaxBpmAlarm + " bmp Minimum Value";
+                if (probCounter > 2) {
+                    sendSMSMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            startScanHeartRate();
+                        }
+                    });
+                    Log.v("charChanged", "value alarm: "+bpm+" counter:"+probCounter);
+                }
             }
             final String hrbpm = String.valueOf(bpm) + " bpm";
             Log.v("charChanged", "got heartrate bpm: " + hrbpm);
@@ -243,14 +262,14 @@ public class MainActivity extends Activity {
                     }
                 });
             } else {
-                probCounter=0;
+                if (bpm<MaxBpmAlarm && bpm>MinBpmAlarm ) {probCounter = 0;} else {probCounter++;}
                 boolean goodKeyAndVar = false;
-/*                try {
+                try {
                     String[] keyvarArray = new String[]{KEY, HEART_RATE_ID};
-                    goodKeyAndVar = new ApiUbidots_verifyApiKey().execute(keyvarArray).get();
+                    goodKeyAndVar = new ApiUbidots_VerifyVarId().execute(keyvarArray).get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
-                }*/
+                }
                 if (goodKeyAndVar) {
                     new ApiUbidots().execute(KEY, HEART_RATE_ID, String.valueOf(bpm));
                     runOnUiThread(new Runnable() {
@@ -353,6 +372,7 @@ public class MainActivity extends Activity {
         };
         timer.scheduleAtFixedRate(timerTask, 15000, Min_TIMER * 60000 + Hour_TIMER * 3600000);
     }
+
     protected void onResume() {
         super.onResume();
         Log.d("onResume", "onResume()");
@@ -1019,7 +1039,7 @@ public class MainActivity extends Activity {
 
             FileOutputStream fs = context.openFileOutput(fileName, Context.MODE_PRIVATE);
 
-          //  OutputStreamWriter osw = new OutputStreamWriter(fs, "UTF-8");
+            //  OutputStreamWriter osw = new OutputStreamWriter(fs, "UTF-8");
             String s = "KEY = " + KEY + "\n"
                     + "BATTERY_KEY = " + BATTERY_KEY + "\n"
                     + "HEART_RATE_ID = " + HEART_RATE_ID + "\n"
@@ -1079,6 +1099,8 @@ public class MainActivity extends Activity {
         }
     }
 
+    //todo clean "to many permissions asked" with this
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
@@ -1097,7 +1119,7 @@ public class MainActivity extends Activity {
                 } else {
                     Toast.makeText(getApplicationContext(), "SMS faild, please try again.", Toast.LENGTH_LONG).show();
                     Log.v("onReqPermResult", "dont have permission to send sms ");
-        //            return;
+                    //            return;
                 }
             }
         }
@@ -1110,7 +1132,7 @@ public class MainActivity extends Activity {
         protected Void doInBackground(String... params) {
             ApiClient apiClient = new ApiClient(params[0]);
             Variable variable = apiClient.getVariable(params[1]);
-            Log.v("test", "sending Ubidots  rate value: " + params[2] + " to " + params[1] + " Variable");
+            Log.v("test", "sending Ubidots the value: " + params[2] + " to " + params[1] + " Variable");
             if (variable != null) {
                 variable.saveValue(Integer.valueOf(params[2]));
             } else {
@@ -1119,6 +1141,8 @@ public class MainActivity extends Activity {
             return null;
         }
     }
+
+    //todo to many varid verifications, have to make two flags(one to each varID) and verify valid ID only when it is changed, not when is accessed
 
     public class ApiUbidots_VerifyVarId extends AsyncTask<String, Void, Boolean> {
         boolean keyIsValid = false;
