@@ -477,7 +477,7 @@
                     <TextView
                         android:id="@+id/ubiid"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="37dp"
                         android:layout_weight="30"
                         android:text="Ubidots ID" />
 
@@ -499,7 +499,7 @@
                     <TextView
                         android:id="@+id/heartKey"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="46dp"
                         android:layout_weight="30"
                         android:text="Heart Key" />
 
@@ -519,7 +519,7 @@
                     <TextView
                         android:id="@+id/batKey"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="42dp"
                         android:layout_weight="30"
                         android:text="Battery Key" />
 
@@ -540,7 +540,7 @@
                     <TextView
                         android:id="@+id/telef"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="32dp"
                         android:layout_weight="30"
                         android:ems="10"
                         android:inputType="textPersonName"
