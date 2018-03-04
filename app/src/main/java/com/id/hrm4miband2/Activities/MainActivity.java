@@ -55,7 +55,7 @@ public class MainActivity extends Activity {
 
     // Default normal Heart Rate Values
     private static final int ABSOLUTE_MAX_BPM = 200;
-    private static final int ABSOLUTE_MIN_BPM = 40;
+    private static final int ABSOLUTE_MIN_BPM = 30;
 
     /////////////////PERMISSIONS/////////////
     //Flag to signal if the Bluetooth Requests are possible
@@ -94,6 +94,8 @@ public class MainActivity extends Activity {
     private TimerTask timerTask;
     //Timer to do Heart Rate readings
     private Timer timer = new Timer();
+    //Time delay to initiate the timer schedule in milliseconds
+    private int delay=30000;
 
     /////////BLUETOOTH service related//////////
     // the device
@@ -285,7 +287,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        txtBat.setText(battlevel + "%");
+                        txtBat.setText(Integer.toString(battlevel)+ "%");
                     }
                 });
                 //if the given ubidots service key/id are valid
@@ -434,7 +436,7 @@ public class MainActivity extends Activity {
      * <p>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
-     * @param activity
+     * @param activity the main activity
      */
     private static void verifyStoragePermissions(Activity activity) {
         // Check if we have write permission
@@ -498,13 +500,17 @@ public class MainActivity extends Activity {
         getBoundedDevice();
         startConnecting();
         ShowConnected();
-
+        //initiate a task to atuate the heart rate readings
         timerTask = new TimerTask() {
             public void run() {
+                //activate reading
                 startScanHeartRate();
             }
         };
-        timer.scheduleAtFixedRate(timerTask, 15000, Min_TIMER * 60000 + Hour_TIMER * 3600000);
+        //if there is a time interval
+        if ((Min_TIMER > 0) || (Hour_TIMER > 0))
+            //set the timer schedule
+            timer.scheduleAtFixedRate(timerTask, delay, Min_TIMER * 60000 + Hour_TIMER * 3600000);
     }
 
     protected void onResume() {
@@ -856,14 +862,19 @@ public class MainActivity extends Activity {
                 Min_TIMER = value;
                 //restart the timer with the new setting//
                 timer.cancel(); //cancel actual timer
-                timerTask = new TimerTask() {
-                    public void run() {
-                        startScanHeartRate();//requests reading heart rate value
-                    }
-                };
-                timer = new Timer(); //new Timer instance
-                //finally schedulee the task with the new time settings
-                timer.scheduleAtFixedRate(timerTask, 15000, Min_TIMER * 60000 + Hour_TIMER * 3600000);
+                //if there is a time interval
+                if ((Min_TIMER > 0) || (Hour_TIMER > 0)) {
+                    //initiate a task to atuate the heart rate readings
+                    timerTask = new TimerTask() {
+                        public void run() {
+                            //activate reading
+                            startScanHeartRate();//requests reading heart rate value
+                        }
+                    };
+                    timer = new Timer(); //new Timer instance
+                    //finally schedulee the task with the new time settings
+                    timer.scheduleAtFixedRate(timerTask, delay, Min_TIMER * 60000 + Hour_TIMER * 3600000);
+                }
             }
         });
 
@@ -892,14 +903,19 @@ public class MainActivity extends Activity {
                 Hour_TIMER = value;
                 //restart the timer with the new setting//
                 timer.cancel(); //cancel actual timer
-                timerTask = new TimerTask() {
-                    public void run() {
-                        startScanHeartRate();//requests reading heart rate value
-                    }
-                }; //create the task again
-                timer = new Timer(); //new Timer instance
-                //finally schedulee the task with the new time settings
-                timer.scheduleAtFixedRate(timerTask, 15000, Min_TIMER * 60000 + Hour_TIMER * 3600000);
+                //if there is a time interval
+                if ((Min_TIMER > 0) || (Hour_TIMER > 0)) {
+                    //initiate a task to atuate the heart rate readings
+                    timerTask = new TimerTask() {
+                        public void run() {
+                            //activate reading
+                            startScanHeartRate();//requests reading heart rate value
+                        }
+                    };
+                    timer = new Timer(); //new Timer instance
+                    //finally schedulee the task with the new time settings
+                    timer.scheduleAtFixedRate(timerTask, delay, Min_TIMER * 60000 + Hour_TIMER * 3600000);
+                }
             }
         });
 
@@ -1107,6 +1123,9 @@ public class MainActivity extends Activity {
         Log.v("listenHeartRate", "I'm here listening");
     }
 
+    /**
+     * requests reading battery level value
+     */
     private void getBatteryStatus(TextView txtBat) {
         //to store temporarily a GATT service (GATT the generic Attributes service structure)
         BluetoothGattService serviceTemp;
@@ -1157,6 +1176,9 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * requests MiBand to start/stop vibrating
+     */
     private void startVibrate() {
         // is there a GATT (the generic Attributes service structure)
         if (bluetoothGatt != null) {
